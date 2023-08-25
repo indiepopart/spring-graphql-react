@@ -131,7 +131,7 @@ Once the app is created, you will see the OIDC app's configuration:
 ```
 
 
-Add the audience, clientId, issuer and clientSecret to the `.env` file in the project root folder:
+Add the audience, clientId, issuer and clientSecret to an `.env` file in the server root folder:
 
 ```shell
 export SPRING_NEO4J_AUTHENTICATION_PASSWORD=verysecret
@@ -141,7 +141,7 @@ export OKTA_OAUTH2_CLIENT_ID={clientId}
 export OKTA_OAUTH2_AUDIENCE=https://{yourAuth0Domain}/api/v2/
 ```
 
-Again, in the root folder, run the API server with:
+Again, in the server root folder, run the application with:
 
 ```shell
 source .env && ./gradlew bootRun
@@ -181,9 +181,10 @@ auth0 apps create \
   --reveal-secrets
 ```
 
-Copy the auth0 domain and the client Id, and update the `src/.env.local` with the following properties (add the new variables to the example file too):
+Copy the file `.env.example` to `.env.local`. Set the auth0 domain, the client Id, audience and callback URL:
 
 ```shell
+NEXT_PUBLIC_API_SERVER_URL=http://localhost:8080
 NEXT_PUBLIC_AUTH0_DOMAIN={yourAuth0Domain}
 NEXT_PUBLIC_AUTH0_CLIENT_ID={clientId}
 NEXT_PUBLIC_AUTH0_CALLBACK_URL=http://localhost:3000/callback
@@ -193,7 +194,7 @@ NEXT_PUBLIC_AUTH0_AUDIENCE=https://{yourAuth0Domain}/api/v2/
 Run the application with:
 
 ```
-npm run dev
+npm install && npm run dev
 ```
 
 Go to http://localhost:3000 and you should be redirected to the Auth0 universal login page. After login in, you should see a companies list.
