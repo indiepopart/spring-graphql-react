@@ -13,7 +13,7 @@ import org.springframework.transaction.ReactiveTransactionManager;
 import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
-public class SpringBootGraphQLApiConfig {
+public class SpringBootGraphQlApiConfig {
 
     @Bean(ReactiveNeo4jRepositoryConfigurationExtension.DEFAULT_TRANSACTION_MANAGER_BEAN_NAME) //Required for neo4j
     public ReactiveTransactionManager reactiveTransactionManager(

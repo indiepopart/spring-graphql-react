@@ -8,7 +8,6 @@ import org.springframework.boot.test.autoconfigure.graphql.GraphQlTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.graphql.test.tester.GraphQlTester;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
 
@@ -26,7 +25,6 @@ public class CompanyControllerTests {
     @Test
     void shouldGetCompanies() {
 
-
         when(this.companyRepository.findAll())
                 .thenReturn(Flux.just(new Company(
                         "1234",
@@ -40,7 +38,7 @@ public class CompanyControllerTests {
 
         this.graphQlTester
                 .documentName("companyList")
-                .variable("page", 1)
+                .variable("page", 0)
                 .execute()
                 .path("companyList")
                 .matchesJson("""
