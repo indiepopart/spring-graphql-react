@@ -29,7 +29,6 @@ public class Company {
     @Relationship(type = "HAS_CONTROL", direction = Relationship.Direction.INCOMING)
     private List<Person> controlledBy = new ArrayList<>();
 
-
     public Company(String SIC, String category, String companyNumber, String countryOfOrigin, LocalDate incorporationDate, Integer mortgagesOutstanding, String name, String status) {
         this.id = null;
         this.SIC = SIC;
@@ -115,5 +114,4 @@ public class Company {
     public void setStatus(String status) {
         this.status = status;
     }
-
 }
