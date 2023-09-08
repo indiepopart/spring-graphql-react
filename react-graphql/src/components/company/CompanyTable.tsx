@@ -6,8 +6,9 @@ export interface CompanyData {
   category: string,
   companyNumber: string,
   SIC: string
+  status: string,
+  owner: string
 }
-
 export interface CompanyTableProps {
   rowCount: number,
   rows: CompanyData[],

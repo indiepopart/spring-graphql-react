@@ -5,12 +5,18 @@ export type CompaniesQuery = {
   page: number;
 };
 
+export type PersonDTO = {
+  name: string;
+}
+
 export type CompanyDTO = {
   name: string;
   SIC: string;
   id: string;
   companyNumber: string;
   category: string;
+  status: string;
+  controlledBy: PersonDTO[]
 };
 
 export const CompanyApi = {
@@ -36,6 +42,7 @@ export const CompanyApi = {
   },
 
   getCompanyList: async (params?: CompaniesQuery) => {
+
     try {
       const response = await backendAPI.post('/graphql', {
         query: `{
@@ -44,7 +51,11 @@ export const CompanyApi = {
           SIC,
           id,
           companyNumber,
-          category
+          category,
+          status,
+          controlledBy {
+            name
+          }
         }}`,
       });
       return response.data.data.companyList as CompanyDTO[];
