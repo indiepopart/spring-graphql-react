@@ -3,7 +3,6 @@ import CompanyTable from './CompanyTable';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { CompanyApi } from '@/services/companies';
 import Loader from '../loader/Loader';
-import { useAsync } from 'react-use-custom-hooks';
 import { useAsyncWithToken } from '@/hooks/useAsyncWithToken';
 
 interface CompanyTableProperties {
