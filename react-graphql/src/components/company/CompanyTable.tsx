@@ -1,4 +1,4 @@
-import { DataGrid, GridColDef, GridEventListener, GridPaginationModel } from "@mui/x-data-grid";
+import { DataGrid, GridColDef, GridEventListener, GridPaginationModel } from '@mui/x-data-grid';
 
 export interface CompanyData {
   id: string,
@@ -6,8 +6,6 @@ export interface CompanyData {
   category: string,
   companyNumber: string,
   SIC: string
-  status: string,
-  owner: string
 }
 
 export interface CompanyTableProps {
@@ -15,7 +13,7 @@ export interface CompanyTableProps {
   rows: CompanyData[],
   columns: GridColDef[],
   pagination: GridPaginationModel,
-  onRowClick?: GridEventListener<"rowClick">
+  onRowClick?: GridEventListener<'rowClick'>
   onPageChange?: (pagination: GridPaginationModel) => void,
 
 }
@@ -23,7 +21,7 @@ export interface CompanyTableProps {
 const CompanyTable = (props: CompanyTableProps) => {
 
   return (
-    <div>
+    <>
       <DataGrid
         rowCount={props.rowCount}
         rows={props.rows}
@@ -34,7 +32,7 @@ const CompanyTable = (props: CompanyTableProps) => {
             paginationModel: { page: props.pagination.page, pageSize: props.pagination.pageSize },
           },
         }}
-
+        density="compact"
         disableColumnMenu={true}
         disableRowSelectionOnClick={true}
         disableColumnFilter={true}
@@ -43,7 +41,7 @@ const CompanyTable = (props: CompanyTableProps) => {
         onRowClick={props.onRowClick}
         onPaginationModelChange={props.onPageChange}
       />
-    </div>
+    </>
   );
 };
 

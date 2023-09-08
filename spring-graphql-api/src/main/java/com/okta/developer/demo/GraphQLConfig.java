@@ -13,8 +13,9 @@ class GraphQLConfig {
 
     @Bean
     public GraphQlSourceBuilderCustomizer sourceBuilderCustomizer() {
-        return (builder) -> builder.inspectSchemaMappings(report -> {
-            logger.debug(report.toString());
-        });
+        return (builder) ->
+            builder.inspectSchemaMappings(report -> {
+                logger.debug(report.toString());
+            });
     }
 }

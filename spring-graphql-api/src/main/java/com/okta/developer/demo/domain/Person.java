@@ -35,6 +35,7 @@ public class Person {
             return newObject;
         }
     }
+
     public String getBirthMonth() {
         return birthMonth;
     }

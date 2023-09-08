@@ -17,7 +17,7 @@ This repository contains a GraphQL demo, with an API server application and a Re
 To install this example, run the following commands:
 
 ```bash
-git clone https://github.com/indiepopart/spring-graphql-react.git
+git clone https://github.com/oktadev/auth0-spring-graphql-react-example.git spring-graphql-react
 cd spring-graphql-react
 ```
 

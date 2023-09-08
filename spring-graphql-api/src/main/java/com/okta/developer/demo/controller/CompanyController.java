@@ -24,5 +24,4 @@ public class CompanyController {
     public Mono<Long> companyCount() {
         return companyRepository.count();
     }
-
 }
