@@ -31,10 +31,10 @@ cd spring-graphql-api
 
 ### Set up the seed data
 
-Download the following seed files to some folder:
+Download the following seed files to an empty folder:
 
-- [CompanyDataAmericans](https://guides.neo4j.com/ukcompanies/data/CompanyDataAmericans.csv)
-- [LandOwnershipAmericans](https://guides.neo4j.com/ukcompanies/data/LandOwnershipAmericans.csv)
+- [CompanyDataAmericans.csv](https://guides.neo4j.com/ukcompanies/data/CompanyDataAmericans.csv)
+- [LandOwnershipAmericans.csv](https://guides.neo4j.com/ukcompanies/data/LandOwnershipAmericans.csv)
 - [PSCAmericans.csv](https://guides.neo4j.com/ukcompanies/data/PSCAmericans.csv)
 
 Edit the file `src/main/docker/neo4j.yml` and update the seed data csv folder path:
@@ -135,10 +135,10 @@ Add the audience, clientId, issuer and clientSecret to an `.env` file in the ser
 
 ```shell
 export SPRING_NEO4J_AUTHENTICATION_PASSWORD=verysecret
-export OKTA_OAUTH2_CLIENT_SECRET={clientSecret}
-export OKTA_OAUTH2_ISSUER=https://{yourAuth0Domain}/
-export OKTA_OAUTH2_CLIENT_ID={clientId}
-export OKTA_OAUTH2_AUDIENCE=https://{yourAuth0Domain}/api/v2/
+export OKTA_OAUTH2_CLIENT_SECRET=<client-secret>
+export OKTA_OAUTH2_ISSUER=https://<your-auth0-domain>/
+export OKTA_OAUTH2_CLIENT_ID=<client-id>
+export OKTA_OAUTH2_AUDIENCE=https://<your-auth0-domain>/api/v2/
 ```
 
 Again, in the server root folder, run the application with:
@@ -172,23 +172,25 @@ cd react-graphql
 With the Auth0 client, create an SPA application:
 
 ```shell
+```shell
 auth0 apps create \
   --name "React client for GraphQL" \
   --description "SPA React client for a Spring GraphQL API" \
   --type spa \
   --callbacks http://localhost:3000/callback \
   --logout-urls http://localhost:3000 \
-  --reveal-secrets
+  --origins http://localhost:3000 \
+  --web-origins http://localhost:3000
 ```
 
 Copy the file `.env.example` to `.env.local`. Set the auth0 domain, the client Id, audience and callback URL:
 
 ```shell
 NEXT_PUBLIC_API_SERVER_URL=http://localhost:8080
-NEXT_PUBLIC_AUTH0_DOMAIN={yourAuth0Domain}
-NEXT_PUBLIC_AUTH0_CLIENT_ID={clientId}
+NEXT_PUBLIC_AUTH0_DOMAIN=<your-auth0-domain>
+NEXT_PUBLIC_AUTH0_CLIENT_ID=<client-id>
 NEXT_PUBLIC_AUTH0_CALLBACK_URL=http://localhost:3000/callback
-NEXT_PUBLIC_AUTH0_AUDIENCE=https://{yourAuth0Domain}/api/v2/
+NEXT_PUBLIC_AUTH0_AUDIENCE=https://<your-auth0-domain>/api/v2/
 ```
 
 Run the application with:
