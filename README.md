@@ -150,12 +150,12 @@ source .env && ./gradlew bootRun
 Wait for the logs to inform the seed data migrations have run (it might take a while):
 
 ```
-2023-08-02T13:06:14.386-03:00  INFO 28673 --- [           main] a.s.neo4j.migrations.core.Migrations     : Applied migration 001 ("Constraint").
-2023-08-02T13:06:23.379-03:00  INFO 28673 --- [           main] a.s.neo4j.migrations.core.Migrations     : Applied migration 002 ("Company").
-2023-08-02T13:11:23.693-03:00  INFO 28673 --- [           main] a.s.neo4j.migrations.core.Migrations     : Applied migration 003 ("Person").
-2023-08-02T13:21:03.680-03:00  INFO 28673 --- [           main] a.s.neo4j.migrations.core.Migrations     : Applied migration 004 ("PersonCompany").
-2023-08-02T13:21:06.519-03:00  INFO 28673 --- [           main] a.s.neo4j.migrations.core.Migrations     : Applied migration 005 ("CompanyData").
-2023-08-02T13:21:06.551-03:00  INFO 28673 --- [           main] a.s.neo4j.migrations.core.Migrations     : Applied migration 006 ("Land").
+2023-09-13T11:52:08.041-03:00  ... Applied migration 001 ("Constraint").
+2023-09-13T11:52:12.121-03:00  ... Applied migration 002 ("Company").
+2023-09-13T11:52:16.508-03:00  ... Applied migration 003 ("Person").
+2023-09-13T11:52:22.635-03:00  ... Applied migration 004 ("PersonCompany").
+2023-09-13T11:52:25.979-03:00  ... Applied migration 005 ("CompanyData").
+2023-09-13T11:52:27.703-03:00  ... Applied migration 006 ("Land").
 ```
 
 
