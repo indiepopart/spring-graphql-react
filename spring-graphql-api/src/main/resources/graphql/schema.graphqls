@@ -3,7 +3,6 @@ type Query {
     companyCount: Int
 }
 
-
 type Company {
     id: ID
     SIC: String

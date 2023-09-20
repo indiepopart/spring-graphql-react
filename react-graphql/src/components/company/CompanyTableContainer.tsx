@@ -1,27 +1,27 @@
-import { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
-import CompanyTable from "./CompanyTable";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { CompanyApi, CompanyDTO } from "@/services/companies";
-import Loader from "../loader/Loader";
-import { useAsyncWithToken } from "@/app/hooks/useAsyncWithToken";
+import { GridColDef, GridPaginationModel } from '@mui/x-data-grid';
+import CompanyTable from './CompanyTable';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { CompanyApi, CompanyDTO } from '@/services/companies';
+import Loader from '../loader/Loader';
+import { useAsyncWithToken } from '@/hooks/useAsyncWithToken';
 
 interface CompanyTableProperties {
   page?: number;
 }
 
 const columns: GridColDef[] = [
-  { field: "id", headerName: "ID", width: 70 },
+  { field: 'id', headerName: 'ID', width: 70 },
   {
-    field: "companyNumber",
-    headerName: "Company #",
+    field: 'companyNumber',
+    headerName: 'Company #',
     width: 100,
     sortable: false,
   },
-  { field: "name", headerName: "Company Name", width: 250, sortable: false },
-  { field: "category", headerName: "Category", width: 200, sortable: false },
-  { field: "SIC", headerName: "SIC", width: 200, sortable: false },
-  { field: "status", headerName: "Status", width: 100, sortable: false },
-  { field: "owner", headerName: "Owner", width: 200, sortable: false },
+  { field: 'name', headerName: 'Company Name', width: 250, sortable: false },
+  { field: 'category', headerName: 'Category', width: 200, sortable: false },
+  { field: 'SIC', headerName: 'SIC', width: 200, sortable: false },
+  { field: 'status', headerName: 'Status', width: 100, sortable: false },
+  { field: 'owner', headerName: 'Owner', width: 200, sortable: false },
 ];
 
 const CompanyTableContainer = (props: CompanyTableProperties) => {
@@ -47,10 +47,9 @@ const CompanyTableContainer = (props: CompanyTableProperties) => {
   const onPageChange = (pagination: GridPaginationModel) => {
     const params = new URLSearchParams(searchParams.toString());
     const page = pagination.page + 1;
-    params.set("page", page.toString());
-    router.push(pathName + "?" + params.toString());
+    params.set('page', page.toString());
+    router.push(pathName + '?' + params.toString());
   };
-
 
   const companyData = dataList?.map((company: CompanyDTO) => {
     return {
@@ -60,7 +59,7 @@ const CompanyTableContainer = (props: CompanyTableProperties) => {
       companyNumber: company.companyNumber,
       SIC: company.SIC,
       status: company.status,
-      owner: company.controlledBy.map((person) => person.name).join(", "),
+      owner: company.controlledBy.map((person) => person.name).join(', '),
     }
   });
 

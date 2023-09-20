@@ -1,4 +1,4 @@
-import backendAPI from "./base";
+import backendAPI from './base';
 
 let requestInterceptor: number;
 let responseInterceptor: number;
@@ -24,7 +24,7 @@ export const setInterceptors = (accessToken: String) => {
       };
     },
     function (error) {
-      console.log("request interceptor error", error);
+      console.log('request interceptor error', error);
       return Promise.reject(error);
     }
   );

@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import CompanyTableContainer from "@/components/company/CompanyTableContainer";
-import { Box, Typography } from "@mui/material";
-import { useSearchParams } from "next/navigation";
+import CompanyTableContainer from '@/components/company/CompanyTableContainer';
+import { Box, Typography } from '@mui/material';
+import { useSearchParams } from 'next/navigation';
 
 const HomePage = () => {
   const searchParams = useSearchParams();
-  const page = searchParams.get("page")
-    ? parseInt(searchParams.get("page") as string)
+  const page = searchParams.get('page')
+    ? parseInt(searchParams.get('page') as string)
     : 1;
 
   return (

@@ -1,8 +1,8 @@
 'use client'
 
-import { useAuth0 } from "@auth0/auth0-react";
-import { useEffect } from "react";
-import Loader from "../loader/Loader";
+import { useAuth0 } from '@auth0/auth0-react';
+import { useEffect } from 'react';
+import Loader from '../loader/Loader';
 
 const AuthenticationGuard = (props: { children: React.ReactNode }) => {
   const { isLoading, isAuthenticated, error, loginWithRedirect } = useAuth0();
