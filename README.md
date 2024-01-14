@@ -4,12 +4,12 @@ This repository contains a GraphQL demo, with an API server application and a Re
 
 **Prerequisites:**
 
-- [Node.js v18.16.1](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
-- [npm 9.5.1](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
+- [Node.js v20.10.0](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
+- [npm 10.2.3](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
 - [Java OpenJDK 17](https://jdk.java.net/java-se-ri/17)
-- [Docker 24.0.2](https://docs.docker.com/desktop/)
+- [Docker 24.0.7](https://docs.docker.com/desktop/)
 - [Auth0 account](https://auth0.com/signup)
-- [Auth0 CLI 1.0.0](https://github.com/auth0/auth0-cli#installation)
+- [Auth0 CLI 1.3.0](https://github.com/auth0/auth0-cli#installation)
 
 
 ## Getting Started
@@ -37,10 +37,9 @@ Download the following seed files to an empty folder:
 - [LandOwnershipAmericans.csv](https://guides.neo4j.com/ukcompanies/data/LandOwnershipAmericans.csv)
 - [PSCAmericans.csv](https://guides.neo4j.com/ukcompanies/data/PSCAmericans.csv)
 
-Edit the file `src/main/docker/neo4j.yml` and update the seed data csv folder path:
+Edit the file `compose.yml` and update the seed data csv folder path:
 
 ```yml
-name: companies
 services:
   neo4j:
     image: neo4j:5
@@ -51,18 +50,12 @@ services:
 
 ### Run a local Neo4j database
 
-Create the file `src/main/docker/.env` with the following content:
+Create the file `.env` at the server root folder with the following content:
 
+__.env__
 ```shell
-NEO4J_PASSWORD=verysecret
+export NEO4J_PASSWORD=verysecret
 ```
-
-In a terminal, go to the `docker` folder and run:
-
-```shell
-docker compose -f neo4j.yml up
-```
-
 
 ### Create the server application in Auth0
 
@@ -131,20 +124,25 @@ Once the app is created, you will see the OIDC app's configuration:
 ```
 
 
-Add the audience, clientId, issuer and clientSecret to an `.env` file in the server root folder:
+Add the audience, clientId, issuer to the `application.properties` file:
 
+```properties
+okta.oauth2.issuer=https://<your-auth0-domain>/
+okta.oauth2.client-id=<client-id>
+okta.oauth2.audience=${okta.oauth2.issuer}api/v2/
+```
+
+Add the clientSecret to the `.env` file:
+
+__.env__
 ```shell
-export SPRING_NEO4J_AUTHENTICATION_PASSWORD=verysecret
 export OKTA_OAUTH2_CLIENT_SECRET=<client-secret>
-export OKTA_OAUTH2_ISSUER=https://<your-auth0-domain>/
-export OKTA_OAUTH2_CLIENT_ID=<client-id>
-export OKTA_OAUTH2_AUDIENCE=https://<your-auth0-domain>/api/v2/
 ```
 
 Again, in the server root folder, run the application with:
 
 ```shell
-source .env && ./gradlew bootRun
+./gradlew bootRun
 ```
 
 Wait for the logs to inform the seed data migrations have run (it might take a while):
