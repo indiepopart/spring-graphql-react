@@ -139,7 +139,7 @@ __.env__
 export OKTA_OAUTH2_CLIENT_SECRET=<client-secret>
 ```
 
-Again, in the server root folder, run the application with:
+In the server root folder, run the application with:
 
 ```shell
 ./gradlew bootRun
