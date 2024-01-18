@@ -1,0 +1,1558 @@
+:experimental:
+:commandkey: &#8984;
+:toc: macro
+:source-highlighter: highlight.js
+
+= GraphQL API with Spring Boot
+
+In this demo, you'll see how to build a GraphQL API with Spring Boot. You'll use Spring for GraphQL to expose a Reactive Neo4j repository as a RESTful API. You'll build a client application using React.js and Next.js. You'll also use the Okta Spring Boot Starter to add authorization to the server application, with Auth0 as the Identity Provider. Finally, you'll use the Auth0 React SDK for adding authentication to the React client application.
+
+Features:
+
+🖪 Neo4j Database +
+🔐 Security with OAuth 2.0 and OpenID Connect +
+🌟 Refresh Tokens for better security +
+🔧 Okta Spring Boot Starter for the server +
+🔧 Auth0 React SDK for the client +
+🌐 Auth0 as the Identity Provider
+
+**Prerequisites**:
+
+- https://docs.npmjs.com/downloading-and-installing-node-js-and-npm[Node.js v20.10.0]
+- https://docs.npmjs.com/downloading-and-installing-node-js-and-npm[npm 10.2.3]
+- https://adoptium.net/[Java 17]: I recommend using https://sdkman.io/[SDKMAN!] to manage and install multiple versions of Java.
+- https://docs.docker.com/desktop/[Docker 24.0.7]
+- https://auth0.com/signup[Auth0 account]
+- https://github.com/auth0/auth0-cli#installation[Auth0 CLI 1.3.0] and https://auth0.com/signup[an Auth0 account]
+- https://httpie.io/[HTTPie 3.2.2]
+- https://nextjs.org/[Next.js 14.0.4]
+
+
+toc::[]
+
+**Fast Track**: https://github.com/oktadev/auth0-java-microservices-examples[Clone the repo] and follow the instructions in link:README.md[`spring-graphql-react/README.md`] to configure everything.
+
+== Build a GraphQL API with Spring Boot
+
+. Create the application with Spring Initializr and HTTPie:
++
+[source,shell]
+----
+https start.spring.io/starter.tgz \
+  bootVersion==3.2.1 \
+  language==java \
+  packaging==jar \
+  javaVersion==17 \
+  type==gradle-project \
+  dependencies==data-neo4j,graphql,docker-compose,web \
+  groupId==com.okta.developer \
+  artifactId==spring-graphql  \
+  name=="Spring Boot API" \
+  description=="Demo project of a Spring Boot GraphQL API" \
+  baseDir==spring-graphql-api \
+  packageName==com.okta.developer.demo \
+  | tar -xzvf -
+----
+
+. Open the `spring-graphql-api` directory in IntelliJ IDEA:
++
+[source,shell]
+----
+idea spring-graphql-api
+----
+
+. Define the GraphQL API with a schema file:
++
+[source,graphql]
+.src/main/resources/graphql/schema.graphqls
+----
+type Query {
+    companyList(page: Int): [Company!]!
+    companyCount: Int
+}
+
+type Company {
+    id: ID
+    SIC: String
+    category: String
+    companyNumber: String
+    countryOfOrigin: String
+    incorporationDate: String
+    mortgagesOutstanding: Int
+    name: String
+    status: String
+    controlledBy: [Person!]!
+    owns: [Property!]!
+}
+
+type Person {
+    id: ID
+    birthMonth: String
+    birthYear: String
+    nationality: String
+    name: String
+    countryOfResidence: String
+}
+
+type Property {
+    id: ID
+    address: String
+    county: String
+    district: String
+    titleNumber: String
+}
+----
+
+. Add the classes `Person`, `Property` and `Company`.
++
+[source,java]
+.src/main/java/com/okta/developer/demo/domain/Person.java
+----
+package com.okta.developer.demo.domain;
+
+import org.springframework.data.neo4j.core.schema.GeneratedValue;
+import org.springframework.data.neo4j.core.schema.Id;
+import org.springframework.data.neo4j.core.schema.Node;
+
+@Node
+public class Person {
+
+    @Id @GeneratedValue
+    private Long id;
+
+    private String birthMonth;
+    private String birthYear;
+    private String countryOfResidence;
+
+    private String name;
+    private String nationality;
+
+    public Person(String birthMonth, String birthYear, String countryOfResidence, String name, String nationality) {
+        this.id = null;
+        this.birthMonth = birthMonth;
+        this.birthYear = birthYear;
+        this.countryOfResidence = countryOfResidence;
+        this.name = name;
+        this.nationality = nationality;
+    }
+
+    public Person withId(Long id) {
+        if (this.id.equals(id)) {
+            return this;
+        } else {
+            Person newObject = new Person(this.birthMonth, this.birthYear, this.countryOfResidence, this.name, this.nationality);
+            newObject.id = id;
+            return newObject;
+        }
+    }
+
+    public String getBirthMonth() {
+        return birthMonth;
+    }
+
+    public void setBirthMonth(String birthMonth) {
+        this.birthMonth = birthMonth;
+    }
+
+    public String getBirthYear() {
+        return birthYear;
+    }
+
+    public void setBirthYear(String birthYear) {
+        this.birthYear = birthYear;
+    }
+
+    public String getCountryOfResidence() {
+        return countryOfResidence;
+    }
+
+    public void setCountryOfResidence(String countryOfResidence) {
+        this.countryOfResidence = countryOfResidence;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getNationality() {
+        return nationality;
+    }
+
+    public void setNationality(String nationality) {
+        this.nationality = nationality;
+    }
+
+    public Long getId() {
+        return this.id;
+    }
+}
+----
++
+[source,java]
+.src/main/java/com/okta/developer/demo/domain/Property.java
+----
+package com.okta.developer.demo.domain;
+
+import org.springframework.data.neo4j.core.schema.GeneratedValue;
+import org.springframework.data.neo4j.core.schema.Id;
+import org.springframework.data.neo4j.core.schema.Node;
+
+@Node
+public class Property {
+
+    @Id
+    @GeneratedValue  private Long id;
+    private String address;
+    private String county;
+    private String district;
+    private String titleNumber;
+
+    public Property(String address, String county, String district, String titleNumber) {
+        this.id = null;
+        this.address = address;
+        this.county = county;
+        this.district = district;
+        this.titleNumber = titleNumber;
+    }
+
+    public Property withId(Long id) {
+        if (this.id.equals(id)) {
+            return this;
+        } else {
+            Property newObject = new Property(this.address, this.county, this.district, this.titleNumber);
+            newObject.id = id;
+            return newObject;
+        }
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public String getCounty() {
+        return county;
+    }
+
+    public void setCounty(String county) {
+        this.county = county;
+    }
+
+    public String getDistrict() {
+        return district;
+    }
+
+    public void setDistrict(String district) {
+        this.district = district;
+    }
+
+    public String getTitleNumber() {
+        return titleNumber;
+    }
+
+    public void setTitleNumber(String titleNumber) {
+        this.titleNumber = titleNumber;
+    }
+}
+----
++
+[source,java]
+.src/main/java/com/okta/developer/demo/domain/Company.java
+----
+package com.okta.developer.demo.domain;
+
+import org.springframework.data.neo4j.core.schema.GeneratedValue;
+import org.springframework.data.neo4j.core.schema.Id;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
+@Node
+public class Company {
+    @Id
+    @GeneratedValue
+    private Long id;
+    private String SIC;
+    private String category;
+    private String companyNumber;
+    private String countryOfOrigin;
+    private LocalDate incorporationDate;
+    private Integer mortgagesOutstanding;
+    private String name;
+    private String status;
+
+    // Mapped automatically
+    private List<Property> owns = new ArrayList<>();
+
+    @Relationship(type = "HAS_CONTROL", direction = Relationship.Direction.INCOMING)
+    private List<Person> controlledBy = new ArrayList<>();
+
+    public Company(String SIC, String category, String companyNumber, String countryOfOrigin, LocalDate incorporationDate, Integer mortgagesOutstanding, String name, String status) {
+        this.id = null;
+        this.SIC = SIC;
+        this.category = category;
+        this.companyNumber = companyNumber;
+        this.countryOfOrigin = countryOfOrigin;
+        this.incorporationDate = incorporationDate;
+        this.mortgagesOutstanding = mortgagesOutstanding;
+        this.name = name;
+        this.status = status;
+    }
+
+    public Company withId(Long id) {
+        if (this.id.equals(id)) {
+            return this;
+        } else {
+            Company newObject = new Company(this.SIC, this.category, this.companyNumber, this.countryOfOrigin, this.incorporationDate, this.mortgagesOutstanding, this.name, this.status);
+            newObject.id = id;
+            return newObject;
+        }
+    }
+
+    public String getSIC() {
+        return SIC;
+    }
+
+    public void setSIC(String SIC) {
+        this.SIC = SIC;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public String getCompanyNumber() {
+        return companyNumber;
+    }
+
+    public void setCompanyNumber(String companyNumber) {
+        this.companyNumber = companyNumber;
+    }
+
+    public String getCountryOfOrigin() {
+        return countryOfOrigin;
+    }
+
+    public void setCountryOfOrigin(String countryOfOrigin) {
+        this.countryOfOrigin = countryOfOrigin;
+    }
+
+    public LocalDate getIncorporationDate() {
+        return incorporationDate;
+    }
+
+    public void setIncorporationDate(LocalDate incorporationDate) {
+        this.incorporationDate = incorporationDate;
+    }
+
+    public Integer getMortgagesOutstanding() {
+        return mortgagesOutstanding;
+    }
+
+    public void setMortgagesOutstanding(Integer mortgagesOutstanding) {
+        this.mortgagesOutstanding = mortgagesOutstanding;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+}
+----
+
+. Add the `CompanyRepository` interface:
++
+[source,java]
+.src/main/java/com/okta/developer/demo/repository/CompanyRepository.java
+----
+package com.okta.developer.demo.repository;
+
+import com.okta.developer.demo.domain.Company;
+import org.springframework.data.neo4j.repository.ReactiveNeo4jRepository;
+
+public interface CompanyRepository extends ReactiveNeo4jRepository<Company, Long> {
+
+}
+----
+
+. Create the configuration class `GraphQLConfig` and `SpringBootApiConfig`:
++
+[source,java]
+.src/main/java/com/okta/developer/demo/GraphQLConfig.java
+----
+package com.okta.developer.demo;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.graphql.GraphQlSourceBuilderCustomizer;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration(proxyBeanMethods = false)
+class GraphQLConfig {
+
+    private static Logger logger = LoggerFactory.getLogger("graphql");
+
+    @Bean
+    public GraphQlSourceBuilderCustomizer sourceBuilderCustomizer() {
+        return (builder) ->
+                builder.inspectSchemaMappings(report -> {
+                    logger.debug(report.toString());
+                });
+    }
+}
+----
++
+[source,java]
+.src/main/java/com/okta/developer/demo/SpringBootApiConfig.java
+----
+package com.okta.developer.demo;
+
+import org.neo4j.driver.Driver;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.neo4j.core.ReactiveDatabaseSelectionProvider;
+import org.springframework.data.neo4j.core.transaction.ReactiveNeo4jTransactionManager;
+import org.springframework.data.neo4j.repository.config.ReactiveNeo4jRepositoryConfigurationExtension;
+import org.springframework.transaction.ReactiveTransactionManager;
+
+@Configuration
+public class SpringBootApiConfig {
+
+    @Bean(ReactiveNeo4jRepositoryConfigurationExtension.DEFAULT_TRANSACTION_MANAGER_BEAN_NAME) //Required for neo4j
+    public ReactiveTransactionManager reactiveTransactionManager(
+            Driver driver,
+            ReactiveDatabaseSelectionProvider databaseNameProvider) {
+        return new ReactiveNeo4jTransactionManager(driver, databaseNameProvider);
+    }
+}
+----
+
+. Create the `CompanyController` class with endpoints matching the GraphQL schema:
++
+[source,java]
+.src/main/java/com/okta/developer/demo/controller/CompanyController.java
+----
+package com.okta.developer.demo.controller;
+
+import com.okta.developer.demo.domain.Company;
+import com.okta.developer.demo.repository.CompanyRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.graphql.data.method.annotation.Argument;
+import org.springframework.graphql.data.method.annotation.QueryMapping;
+import org.springframework.stereotype.Controller;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+@Controller
+public class CompanyController {
+
+    @Autowired
+    private CompanyRepository companyRepository;
+
+    @QueryMapping
+    public Flux<Company> companyList(@Argument Long page) {
+        return companyRepository.findAll().skip(page * 10).take(10);
+    }
+
+    @QueryMapping
+    public Mono<Long> companyCount() {
+        return companyRepository.count();
+    }
+}
+----
+
+. Add the `CompanyControllerTest` class and a test query file:
++
+[source,java]
+.src/test/java/com/okta/developer/demo/controller/CompanyControllerTest.java
+----
+package com.okta.developer.demo.controller;
+
+import com.okta.developer.demo.domain.Company;
+import com.okta.developer.demo.repository.CompanyRepository;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.graphql.GraphQlTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.graphql.test.tester.GraphQlTester;
+import reactor.core.publisher.Flux;
+
+import java.time.LocalDate;
+
+import static org.mockito.Mockito.when;
+
+@GraphQlTest(CompanyController.class)
+public class CompanyControllerTests {
+
+    @Autowired
+    private GraphQlTester graphQlTester;
+
+    @MockBean
+    private CompanyRepository companyRepository;
+
+    @Test
+    void shouldGetCompanies() {
+
+        when(this.companyRepository.findAll())
+                .thenReturn(Flux.just(new Company(
+                        "1234",
+                        "private",
+                        "12345678",
+                        "UK",
+                        LocalDate.of(2020, 1, 1),
+                        0,
+                        "Test Company",
+                        "active")));
+
+        this.graphQlTester
+                .documentName("companyList")
+                .variable("page", 0)
+                .execute()
+                .path("companyList")
+                .matchesJson("""
+                    [{
+                        "id": null,
+                        "SIC": "1234",
+                        "name": "Test Company",
+                        "status": "active",
+                        "category": "private",
+                        "companyNumber": "12345678",
+                        "countryOfOrigin": "UK"
+                    }]
+                """);
+    }
+}
+----
++
+[source, graphql]
+.src/test/resources/graphql-test/companyList.graphql
+----
+query companyList($page: Int) {
+    companyList(page: $page) {
+        id
+        SIC
+        name
+        status
+        category
+        companyNumber
+        countryOfOrigin
+    }
+}
+----
+
+. Update the test configuration in `build.gradle` file, so passed tests are logged:
++
+[source,groovy]
+----
+tasks.named('test') {
+    useJUnitPlatform()
+
+    testLogging {
+        // set options for log level LIFECYCLE
+        events "failed", "passed"
+    }
+}
+----
+
+. Run the tests:
++
+[source,shell]
+----
+./gradlew test
+----
+
+== Add Neo4j seed data
+
+. Add Neo4j migrations dependency to `build.gradle` file, for the seed data insertion:
++
+[source,groovy]
+.build.gradle
+----
+implementation 'eu.michael-simons.neo4j:neo4j-migrations-spring-boot-starter:2.8.2'
+----
+
+. Create the directory `src/main/resources/neo4j/migrations` and the following migration files:
++
+[source,cypher]
+.src/main/resources/neo4j/migrations/V001__Constraint.cypher
+----
+CREATE CONSTRAINT FOR (c:Company) REQUIRE c.companyNumber IS UNIQUE;
+CREATE CONSTRAINT FOR (p:Person) REQUIRE (p.birthMonth, p.birthYear, p.name) IS UNIQUE;
+CREATE CONSTRAINT FOR (p:Property) REQUIRE p.titleNumber IS UNIQUE;
+----
++
+[source,cypher]
+.src/main/resources/neo4j/migrations/V002__Company.cypher
+----
+LOAD CSV WITH HEADERS FROM "file:///PSCAmericans.csv" AS row
+MERGE (c:Company {companyNumber: row.company_number})
+RETURN COUNT(*);
+----
++
+[source,cypher]
+.src/main/resources/neo4j/migrations/V003__Person.cypher
+----
+LOAD CSV WITH HEADERS FROM "file:///PSCAmericans.csv" AS row
+MERGE (p:Person {name: row.`data.name`, birthYear: row.`data.date_of_birth.year`, birthMonth: row.`data.date_of_birth.month`})
+  ON CREATE SET p.nationality = row.`data.nationality`,
+  p.countryOfResidence = row.`data.country_of_residence`
+RETURN COUNT(*);
+----
++
+[source,cypher]
+.src/main/resources/neo4j/migrations/V004__PersonCompany.cypher
+----
+LOAD CSV WITH HEADERS FROM "file:///PSCAmericans.csv" AS row
+MATCH (c:Company {companyNumber: row.company_number})
+MATCH (p:Person {name: row.`data.name`, birthYear: row.`data.date_of_birth.year`, birthMonth: row.`data.date_of_birth.month`})
+MERGE (p)-[r:HAS_CONTROL]->(c)
+SET r.nature = split(replace(replace(replace(row.`data.natures_of_control`, "[",""),"]",""),  '"', ""), ",")
+RETURN COUNT(*);
+----
++
+[source,cypher]
+.src/main/resources/neo4j/migrations/V005__CompanyData.cypher
+----
+LOAD CSV WITH HEADERS FROM "file:///CompanyDataAmericans.csv" AS row
+MATCH (c:Company {companyNumber: row.` CompanyNumber`})
+SET c.name = row.CompanyName,
+c.mortgagesOutstanding = toInteger(row.`Mortgages.NumMortOutstanding`),
+c.incorporationDate = Date(Datetime({epochSeconds: apoc.date.parse(row.IncorporationDate,'s','dd/MM/yyyy')})),
+c.SIC = row.`SICCode.SicText_1`,
+c.countryOfOrigin = row.CountryOfOrigin,
+c.status = row.CompanyStatus,
+c.category = row.CompanyCategory;
+----
++
+[source,cypher]
+.src/main/resources/neo4j/migrations/V006__Land.cypher
+----
+LOAD CSV WITH HEADERS FROM "file:///LandOwnershipAmericans.csv" AS row
+MATCH (c:Company {companyNumber: row.`Company Registration No. (1)`})
+MERGE (p:Property {titleNumber: row.`Title Number`})
+SET p.address = row.`Property Address`,
+p.county  = row.County,
+p.price   = toInteger(row.`Price Paid`),
+p.district = row.District
+MERGE (c)-[r:OWNS]->(p)
+WITH row, c,r,p WHERE row.`Date Proprietor Added` IS NOT NULL
+SET r.date = Date(Datetime({epochSeconds: apoc.date.parse(row.`Date Proprietor Added`,'s','dd-MM-yyyy')}));
+CREATE INDEX FOR (c:Company) ON c.incorporationDate;
+----
+
+. Update the `application.properties` file:
++
+[source,properties]
+.src/main/resources/application.properties
+----
+spring.graphql.graphiql.enabled=true
+spring.graphql.schema.introspection.enabled=true
+org.neo4j.migrations.transaction-mode=PER_STATEMENT
+
+
+spring.graphql.cors.allowed-origins=http://localhost:3000
+----
+
+. Create an `.env` file in the server root to store the Neo4j credentials:
++
+[source,shell]
+..env
+----
+export NEO4J_PASSWORD=verysecret
+----
++
+Add the file to `.gitignore`
+
+. Download the seed files to an empty directory, as it will be mounted to the Neo4j container:
++
+- https://guides.neo4j.com/ukcompanies/data/CompanyDataAmericans.csv[CompanyDataAmericans.csv]
+- https://guides.neo4j.com/ukcompanies/data/LandOwnershipAmericans.csv[LandOwnershipAmericans.csv]
+- https://guides.neo4j.com/ukcompanies/data/PSCAmericans.csv[PSCAmericans.csv]
+
+. Edit the file compose.yml and add a service for the Neo4j database.
++
+[source,yaml]
+.compose.yml
+----
+services:
+  neo4j:
+    image: neo4j:5
+    volumes:
+      - <csv-dir>:/var/lib/neo4j/import
+    environment:
+      - NEO4J_AUTH=neo4j/${NEO4J_PASSWORD}
+      - NEO4JLABS_PLUGINS=["apoc"]
+    # If you want to expose these ports outside your dev PC,
+    # remove the "127.0.0.1:" prefix
+    ports:
+      - '127.0.0.1:7474:7474'
+      - '127.0.0.1:7687:7687'
+    healthcheck:
+      test: ['CMD', 'wget', 'http://localhost:7474/', '-O', '-']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+----
++
+Replace `<csv-dir>` with the path to the CSV files downloaded before
+
+== Run the GraphQL API server
+
+. Start the server with `gradlew`:
++
+[source,shell]
+----
+./gradlew bootRun
+----
+
+. Test the API with GraphiQL at `http://localhost:8080/graphiql`. In the query box on the left, paste the following query and click the play button:
++
+[source,graphql]
+----
+{
+    companyList(page: 20) {
+        id
+        SIC
+        name
+        status
+        category
+        companyNumber
+        countryOfOrigin
+    }
+}
+----
+
+== Build a React client
+
+. Create the application with `create-next-app` at the parent directory of the server application:
++
+[source,shell]
+----
+npx create-next-app
+----
++
+Answer the questions as follows:
++
+----
+✔ What is your project named? ... react-graphql
+✔ Would you like to use TypeScript? ... Yes
+✔ Would you like to use ESLint? ... Yes
+✔ Would you like to use Tailwind CSS? ... No
+✔ Would you like to use `src/` directory? ... Yes
+✔ Would you like to use App Router? (recommended) ... Yes
+✔ Would you like to customize the default import alias? ... No
+----
+
+. Add the required dependencies:
++
+[source,shell]
+----
+cd react-graphql && \
+  npm install @mui/x-data-grid && \
+  npm install @mui/material@5.14.5 @emotion/react @emotion/styled && \
+  npm install react-use-custom-hooks && \
+  npm install axios
+----
+
+. Run the client application:
++
+[source,shell]
+----
+npm run dev
+----
++
+Navigate to `http://localhost:3000` and you should see the default Next.js page. Then stop the application.
+
+. Create the API client
++
+[source,tsx]
+.src/services/base.tsx
+----
+import axios from 'axios';
+
+export const backendAPI = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_SERVER_URL
+});
+
+export default backendAPI;
+----
++
+[source,tsx]
+.src/services/companies.tsx
+----
+import { AxiosError } from 'axios';
+import { backendAPI } from './base';
+
+export type CompaniesQuery = {
+  page: number;
+};
+
+export type CompanyDTO = {
+  name: string;
+  SIC: string;
+  id: string;
+  companyNumber: string;
+  category: string;
+};
+
+export const CompanyApi = {
+
+  getCompanyCount: async () => {
+    try {
+      const response = await backendAPI.post('/graphql', {
+        query: `{
+        companyCount
+      }`,
+      });
+      return response.data.data.companyCount as number;
+    } catch (error) {
+      console.log('handle get company count error', error);
+      if (error instanceof AxiosError) {
+        let axiosError = error as AxiosError;
+        if (axiosError.response?.data) {
+          throw new Error(axiosError.response?.data as string);
+        }
+      }
+      throw new Error('Unknown error, please contact the administrator');
+    }
+  },
+
+  getCompanyList: async (params?: CompaniesQuery) => {
+    try {
+      const response = await backendAPI.post('/graphql', {
+        query: `{
+        companyList(page: ${params?.page || 0}) {
+          name,
+          SIC,
+          id,
+          companyNumber,
+          category
+        }}`,
+      });
+      return response.data.data.companyList as CompanyDTO[];
+    } catch (error) {
+      console.log('handle get companies error', error);
+      if (error instanceof AxiosError) {
+        let axiosError = error as AxiosError;
+        if (axiosError.response?.data) {
+          throw new Error(axiosError.response?.data as string);
+        }
+      }
+      throw new Error('Unknown error, please contact the administrator');
+    }
+  },
+
+};
+----
+
+. Add `.env.example` abd `.env.local` files to the client root:
++
+[source,shell]
+..env.example,.env.local
+----
+NEXT_PUBLIC_API_SERVER_URL=http://localhost:8080
+----
+
+. Create the `CompanyTable` component:
++
+[source,tsx]
+.src/components/company/CompanyTable.tsx
+----
+import { DataGrid, GridColDef, GridEventListener, GridPaginationModel } from '@mui/x-data-grid';
+
+export interface CompanyData {
+  id: string,
+  name: string,
+  category: string,
+  companyNumber: string,
+  SIC: string
+}
+
+export interface CompanyTableProps {
+  rowCount: number,
+  rows: CompanyData[],
+  columns: GridColDef[],
+  pagination: GridPaginationModel,
+  onRowClick?: GridEventListener<'rowClick'>
+  onPageChange?: (pagination: GridPaginationModel) => void,
+
+}
+
+const CompanyTable = (props: CompanyTableProps) => {
+
+  return (
+    <>
+      <DataGrid
+        rowCount={props.rowCount}
+        rows={props.rows}
+        columns={props.columns}
+        pageSizeOptions={[props.pagination.pageSize ]}
+        initialState={{
+          pagination: {
+            paginationModel: { page: props.pagination.page, pageSize: props.pagination.pageSize },
+          },
+        }}
+        density='compact'
+        disableColumnMenu={true}
+        disableRowSelectionOnClick={true}
+        disableColumnFilter={true}
+        disableDensitySelector={true}
+        paginationMode='server'
+        onRowClick={props.onRowClick}
+        onPaginationModelChange={props.onPageChange}
+      />
+    </>
+  );
+};
+
+export default CompanyTable;
+----
+
+. Create a loader component:
++
+[source,tsx]
+.src/components/loader/Loader.tsx
+----
+import { Box, CircularProgress, Skeleton } from '@mui/material';
+
+const Loader = () => {
+  return (
+    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 200 }}>
+      <CircularProgress />
+    </Box>
+  );
+}
+
+export default Loader;
+----
+
+. Create a container component:
++
+[source,tsx]
+.src/components/company/CompanyTableContainer.tsx
+----
+import { GridColDef, GridPaginationModel } from '@mui/x-data-grid';
+import CompanyTable from './CompanyTable';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { CompanyApi } from '@/services/companies';
+import Loader from '../loader/Loader';
+import { useAsync } from 'react-use-custom-hooks';
+
+interface CompanyTableProperties {
+  page?: number;
+}
+
+const columns: GridColDef[] = [
+  { field: 'id', headerName: 'ID', width: 70 },
+  {
+    field: 'companyNumber',
+    headerName: 'Company #',
+    width: 100,
+    sortable: false,
+  },
+  { field: 'name', headerName: 'Company Name', width: 350, sortable: false },
+  { field: 'category', headerName: 'Category', width: 200, sortable: false },
+  { field: 'SIC', headerName: 'SIC', width: 400, sortable: false },
+];
+
+const CompanyTableContainer = (props: CompanyTableProperties) => {
+  const router = useRouter();
+  const searchParams = useSearchParams()!;
+  const pathName = usePathname();
+  const page = props.page ? props.page : 1;
+
+  const [dataList, loadingList, errorList] = useAsync(
+    () => CompanyApi.getCompanyList({ page: page - 1 }),
+    {},
+    [page]
+  );
+  const [dataCount] = useAsync(() => CompanyApi.getCompanyCount(), {}, []);
+
+  const onPageChange = (pagination: GridPaginationModel) => {
+    const params = new URLSearchParams(searchParams.toString());
+    const page = pagination.page + 1;
+    params.set('page', page.toString());
+    router.push(pathName + '?' + params.toString());
+  };
+
+  return (
+    <>
+      {loadingList && <Loader />}
+      {errorList && <div>Error</div>}
+
+      {!loadingList && dataList && (
+        <CompanyTable
+          pagination={{ page: page - 1, pageSize: 10 }}
+          rowCount={dataCount}
+          rows={dataList}
+          columns={columns}
+          onPageChange={onPageChange}
+        ></CompanyTable>
+      )}
+    </>
+  );
+};
+
+export default CompanyTableContainer;
+----
+
+. Add the `HomePage` component:
++
+[source,tsx]
+.src/app/HomePage.tsx
+----
+'use client';
+
+import CompanyTableContainer from '@/components/company/CompanyTableContainer';
+import { Box, Typography } from '@mui/material';
+import { useSearchParams } from 'next/navigation';
+
+const HomePage = () => {
+  const searchParams = useSearchParams();
+  const page = searchParams.get('page')
+    ? parseInt(searchParams.get('page') as string)
+    : 1;
+
+  return (
+    <>
+      <Box>
+        <Typography variant='h4' component='h1'>
+          Companies
+        </Typography>
+      </Box>
+      <Box mt={2}>
+        <CompanyTableContainer page={page}></CompanyTableContainer>
+      </Box>
+    </>
+  );
+};
+
+export default HomePage;
+----
+
+. Replace the contents of `src/app/page.tsx` with the following:
++
+[source,tsx]
+.src/app/page.tsx
+----
+import HomePage from './HomePage';
+
+const Page = () => {
+  return (
+    <HomePage/>
+  );
+}
+
+export default Page;
+----
+
+. Add a layout component:
++
+[source,tsx]
+.src/layout/WideLayout.tsx
+----
+'use client';
+
+import { Container, ThemeProvider, createTheme } from '@mui/material';
+
+const theme = createTheme({
+  typography: {
+    fontFamily: 'inherit',
+  },
+});
+
+const WideLayout = (props: { children: React.ReactNode }) => {
+  return (
+    <ThemeProvider theme={theme}>
+      <Container maxWidth='lg' sx={{ mt: 4 }}>
+        {props.children}
+      </Container>
+    </ThemeProvider>
+  );
+};
+
+export default WideLayout;
+----
+
+. Update the root layout:
++
+[source,tsx]
+.src/app/layout.tsx
+----
+import WideLayout from '@/layout/WideLayout';
+import { Ubuntu} from 'next/font/google';
+
+const font = Ubuntu({
+  subsets: ['latin'],
+  weight: ['300','400','500','700'],
+});
+
+export const metadata = {
+  title: 'Create Next App',
+  description: 'Generated by create next app',
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang='en'>
+      <body className={font.className}>
+        <WideLayout>{children}</WideLayout>
+      </body>
+    </html>
+  );
+}
+----
+
+. Remove `globals.css` and `page.module.css` files.
+
+. Run the application with:
++
+[source,shell]
+----
+npm run dev
+----
++
+You will see a table of companies
+
+== Add resource server security
+
+. Stop the application. Open a terminal and run `auth0 login` to configure the Auth0 CLI to get an API key for your tenant. Then, run auth0 apps create to register an OIDC app with the appropriate URLs:
++
+[source,shell]
+----
+auth0 apps create \
+  --name "GraphQL Server" \
+  --description "Spring Boot GraphQL Resource Server" \
+  --type regular \
+  --callbacks http://localhost:8080/login/oauth2/code/okta \
+  --logout-urls http://localhost:8080 \
+  --reveal-secrets
+----
++
+. Add the `okta-spring-boot-starter` dependency:
++
+[source,groovy]
+.build.gradle
+----
+implementation 'com.okta.spring:okta-spring-boot-starter:3.0.6'
+----
++
+. Set the client ID, issuer, and audience for OAuth 2.0 in the `application.properties` file:
++
+[source,properties]
+.src/main/resources/application.properties
+----
+okta.oauth2.issuer=https://<your-auth0-domain>/
+okta.oauth2.client-id=<client-id>
+okta.oauth2.audience=${okta.oauth2.issuer}api/v2/
+----
++
+. Add the client secret to the `.env` file:
++
+[source,shell]
+..env
+----
+export OKTA_OAUTH2_CLIENT_SECRET=<client-secret>
+----
++
+. Add the following factory method to the class `SpringBootApiConfig`, for requiring a bearer token for all requests:
++
+[source,java]
+.src/main/java/com/okta/developer/demo/SpringBootApiConfig.java
+----
+    @Bean
+    public SecurityFilterChain configure(HttpSecurity http) throws Exception {
+        http.oauth2ResourceServer(oauth2ResourceServer -> oauth2ResourceServer.jwt(withDefaults()));
+        return http.build();
+    }
+----
++
+. Run the API server with:
++
+[source,shell]
+----
+./gradlew bootRun
+----
+
+== Test the GraphQL API with an access token
+
+. Get an access token with the Auth0 CLI:
++
+[source,shell]
+----
+auth0 test token -a https://<your-auth0-domain>/api/v2/
+----
+
+. Send a request to the API server:
++
+[source,shell]
+----
+ACCESS_TOKEN=<auth0-access-token>
+----
++
+[source,shell]
+----
+echo -E '{"query":"{\n    companyList(page: 20) {\n        id\n        SIC\n        name\n        status\n        category\n        companyNumber\n        countryOfOrigin\n    }\n}"}' | \
+  http -A bearer -a $ACCESS_TOKEN POST http://localhost:8080/graphql
+----
+
+== Add Auth0 login to the client
+
+. Stop the client. Create an Auth0 application for the client:
++
+[source,shell]
+----
+auth0 apps create \
+  --name "React client for GraphQL" \
+  --description "SPA React client for a Spring GraphQL API" \
+  --type spa \
+  --callbacks http://localhost:3000/callback \
+  --logout-urls http://localhost:3000 \
+  --origins http://localhost:3000 \
+  --web-origins http://localhost:3000
+----
++
+. Update `.env.local` with the client ID and domain:
++
+[source,shell]
+..env.local
+----
+NEXT_PUBLIC_AUTH0_DOMAIN=<your-auth0-domain>
+NEXT_PUBLIC_AUTH0_CLIENT_ID=<client-id>
+NEXT_PUBLIC_AUTH0_CALLBACK_URL=http://localhost:3000/callback
+NEXT_PUBLIC_AUTH0_AUDIENCE=https://$NEXT_PUBLIC_AUTH0_DOMAIN/api/v2/
+----
+
+. Add `page.tsx` as login callback:
++
+[source,tsx]
+.src/app/callback/page.tsx
+----
+import Loader from '@/components/loader/Loader';
+
+const Page = () => {
+  return <Loader/>
+};
+
+export default Page;
+----
+
+. Add the Auth0 React SDK dependency:
++
+[source,shell]
+----
+npm install @auth0/auth0-react
+----
+
+. Create the `Auth0ProviderWithNavigate` component
++
+[source,tsx]
+.src/components/authentication/Auth0ProviderWithNavigate.tsx
+----
+import { AppState, Auth0Provider } from '@auth0/auth0-react';
+import { useRouter } from 'next/navigation';
+import React from 'react';
+
+const Auth0ProviderWithNavigate = (props: { children: React.ReactNode }) => {
+  const router = useRouter();
+
+  const domain = process.env.NEXT_PUBLIC_AUTH0_DOMAIN ||'';
+  const clientId = process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID || '';
+  const redirectUri = process.env.NEXT_PUBLIC_AUTH0_CALLBACK_URL || '';
+  const audience = process.env.NEXT_PUBLIC_AUTH0_AUDIENCE || '';
+
+  const onRedirectCallback = (appState?: AppState) => {
+    router.push(appState?.returnTo || window.location.pathname);
+  };
+
+  if (!(domain && clientId && redirectUri)) {
+    return null;
+  }
+
+  return (
+    <Auth0Provider
+      domain={domain}
+      clientId={clientId}
+      authorizationParams={{
+        audience: audience,
+        redirect_uri: redirectUri,
+      }}
+      useRefreshTokens={true}
+      onRedirectCallback={onRedirectCallback}
+    >
+      <>{props.children}</>
+    </Auth0Provider>
+  );
+};
+
+export default Auth0ProviderWithNavigate;
+----
+
+. Modify the component `WideLayout`:
++
+[source,tsx]
+.src/layout/WideLayout.tsx
+----
+'use client';
+
+import Auth0ProviderWithNavigate from '@/components/authentication/Auth0ProviderWithNavigate';
+import { Container, ThemeProvider, createTheme } from '@mui/material';
+
+const theme = createTheme({
+  typography: {
+    fontFamily: 'inherit',
+  },
+});
+
+const WideLayout = (props: { children: React.ReactNode }) => {
+  return (
+    <ThemeProvider theme={theme}>
+      <Auth0ProviderWithNavigate>
+        <Container maxWidth='lg' sx={{ mt: 4 }}>
+          {props.children}
+        </Container>
+      </Auth0ProviderWithNavigate>
+    </ThemeProvider>
+  );
+};
+
+export default WideLayout;
+----
+
+. Create the component `AuthenticationGuard`:
++
+[source,tsx]
+.src/components/authentication/AuthenticationGuard.tsx
+----
+'use client'
+
+import { useAuth0 } from '@auth0/auth0-react';
+import { useEffect } from 'react';
+import Loader from '../loader/Loader';
+
+const AuthenticationGuard = (props: { children: React.ReactNode }) => {
+  const { isLoading, isAuthenticated, error, loginWithRedirect } = useAuth0();
+
+  useEffect(() => {
+    if (!isAuthenticated && !isLoading) {
+      loginWithRedirect({
+        appState: { returnTo: window.location.href },
+      });
+    }
+  }, [isAuthenticated, isLoading, loginWithRedirect]);
+
+  if (isLoading) {
+    return <Loader />;
+  }
+  if (error) {
+    return <div>Oops... {error.message}</div>;
+  }
+  return <>{isAuthenticated && props.children}</>;
+};
+
+export default AuthenticationGuard;
+----
+
+. Modify the index page:
++
+[source,tsx]
+.src/app/page.tsx
+----
+import AuthenticationGuard from '@/components/authentication/AuthenticationGuard';
+import HomePage from './HomePage';
+
+const Page = () => {
+  return (
+    <AuthenticationGuard>
+      <HomePage/>
+    </AuthenticationGuard>
+  );
+};
+
+export default Page;
+----
+
+== Call the GraphQL API with an access token
+
+. Add request interceptors to the `backendAPI`
++
+[source,tsx]
+.src/services/auth.tsx
+----
+import backendAPI from './base';
+
+let requestInterceptor: number;
+let responseInterceptor: number;
+
+export const clearInterceptors = () => {
+  backendAPI.interceptors.request.eject(requestInterceptor);
+  backendAPI.interceptors.response.eject(responseInterceptor);
+};
+
+export const setInterceptors = (accessToken: String) => {
+
+  clearInterceptors();
+
+  requestInterceptor = backendAPI.interceptors.request.use(
+    // @ts-expect-error
+    function (config) {
+      return {
+        ...config,
+        headers: {
+          ...config.headers,
+          Authorization: `Bearer ${accessToken}`,
+        },
+      };
+    },
+    function (error) {
+      console.log('request interceptor error', error);
+      return Promise.reject(error);
+    }
+  );
+};
+----
+
+. Create the `useAccessToken` hook:
++
+[source,tsx]
+.src/hooks/useAccessToken.tsx
+----
+import { setInterceptors } from '@/services/auth';
+import { useAuth0 } from '@auth0/auth0-react';
+import { useCallback, useState } from 'react';
+
+export const useAccessToken = () => {
+  const { isAuthenticated, getAccessTokenSilently } = useAuth0();
+  const [accessToken, setAccessToken] = useState('');
+
+  const saveAccessToken = useCallback(async () => {
+    if (isAuthenticated) {
+      try {
+        const tokenValue = await getAccessTokenSilently();
+        if (accessToken !== tokenValue) {
+          setInterceptors(tokenValue);
+          setAccessToken(tokenValue);
+        }
+      } catch (err) {
+        // Inactivity timeout
+        console.log('getAccessTokenSilently error', err);
+      }
+    }
+  }, [getAccessTokenSilently, isAuthenticated, accessToken]);
+
+  return {
+    saveAccessToken,
+  };
+};
+----
+
+. Create the `useAsyncWithToken` hook:
++
+[source,tsx]
+.src/hooks/useAsyncWithToken.tsx
+----
+import { useAccessToken } from './useAccessToken';
+import { useAsync } from 'react-use-custom-hooks';
+
+export const useAsyncWithToken = <T, P, E = string>(
+  asyncOperation: () => Promise<T>, deps: any[]
+) => {
+  const { saveAccessToken } = useAccessToken();
+  const [ data, loading, error ] = useAsync(async () => {
+    await saveAccessToken();
+    return asyncOperation();
+  }, {},  deps);
+
+  return {
+    data,
+    loading,
+    error
+  };
+};
+----
+
+. Update the calls in `.src/components/company/CompanyTableContainer.tsx`:
++
+Remove the import:
++
+[source,diff]
+----
+import { useAsync } from 'react-use-custom-hooks';
+----
++
+Add the import:
++
+[source,diff]
+----
+import { useAsyncWithToken } from '@/hooks/useAsyncWithToken';
+----
++
+Remove the lines:
++
+[source,diff]
+----
+const [dataList, loadingList, errorList] = useAsync(
+ () => CompanyApi.getCompanyList({ page: page - 1 }),
+ {},
+ [page]
+);
+const [dataCount] = useAsync(() => CompanyApi.getCompanyCount(), {}, []);
+----
++
+Add the lines:
++
+[source,diff]
+----
+const {
+ data: dataList,
+ loading: loadingList,
+ error: errorList,
+} = useAsyncWithToken(
+ () => CompanyApi.getCompanyList({ page: page - 1}),
+ [props.page]
+);
+
+const { data: dataCount } = useAsyncWithToken(
+ () => CompanyApi.getCompanyCount(),
+ []
+);
+----
+
+. Run the application with:
++
+[source,shell]
+----
+npm run dev
+----
+
+. Test the application at `http://localhost:3000` with a private navigation window
