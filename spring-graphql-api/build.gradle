@@ -1,38 +1,38 @@
 plugins {
-	id 'java'
-	id 'org.springframework.boot' version '3.2.1'
-	id 'io.spring.dependency-management' version '1.1.4'
+    id 'java'
+    id 'org.springframework.boot' version '3.2.1'
+    id 'io.spring.dependency-management' version '1.1.4'
 }
 
 group = 'com.okta.developer'
 version = '0.0.1-SNAPSHOT'
 
 java {
-	sourceCompatibility = '17'
+    sourceCompatibility = '17'
 }
 
 repositories {
-	mavenCentral()
+    mavenCentral()
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-data-neo4j'
-	implementation 'org.springframework.boot:spring-boot-starter-graphql'
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'eu.michael-simons.neo4j:neo4j-migrations-spring-boot-starter:2.8.2'
-	implementation 'com.okta.spring:okta-spring-boot-starter:3.0.6'
-	developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'org.springframework:spring-webflux'
-	testImplementation 'org.springframework.graphql:spring-graphql-test'
+    implementation 'org.springframework.boot:spring-boot-starter-data-neo4j'
+    implementation 'org.springframework.boot:spring-boot-starter-graphql'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'eu.michael-simons.neo4j:neo4j-migrations-spring-boot-starter:2.8.2'
+    implementation 'com.okta.spring:okta-spring-boot-starter:3.0.6'
+    developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework:spring-webflux'
+    testImplementation 'org.springframework.graphql:spring-graphql-test'
 }
 
 tasks.named('test') {
-	useJUnitPlatform()
+    useJUnitPlatform()
 
-	testLogging {
-		// set options for log level LIFECYCLE
-		events "failed", "passed"
-	}
+    testLogging {
+        // set options for log level LIFECYCLE
+        events "failed", "passed"
+    }
 
 }
