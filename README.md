@@ -8,7 +8,7 @@ This repository contains a GraphQL demo, with an API server application and a Re
 - [npm 10.2.3](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
 - [Java OpenJDK 17](https://jdk.java.net/java-se-ri/17)
 - [Docker 24.0.7](https://docs.docker.com/desktop/)
-- [Auth0 account](https://auth0.com/signup)
+- [An Auth0 account](https://auth0.com/signup)
 - [Auth0 CLI 1.3.0](https://github.com/auth0/auth0-cli#installation)
 
 
@@ -37,7 +37,7 @@ Download the following seed files to an empty folder:
 - [LandOwnershipAmericans.csv](https://guides.neo4j.com/ukcompanies/data/LandOwnershipAmericans.csv)
 - [PSCAmericans.csv](https://guides.neo4j.com/ukcompanies/data/PSCAmericans.csv)
 
-Edit the file `compose.yml` and update the seed data csv folder path:
+Edit the `compose.yml` file and update the seed data csv folder path:
 
 ```yml
 services:
@@ -50,7 +50,7 @@ services:
 
 ### Run a local Neo4j database
 
-Create the file `.env` at the server root folder with the following content:
+Create an `.env` file at the server root folder with the following content:
 
 __.env__
 ```shell
@@ -59,7 +59,7 @@ export NEO4J_PASSWORD=verysecret
 
 ### Create the server application in Auth0
 
-Sign up at [Auth0](https://auth0.com/signup) and install the [Auth0 CLI](https://github.com/auth0/auth0-cli) that will help you create the tenant and the client applications.
+Sign up for [Auth0](https://auth0.com/signup) and install the [Auth0 CLI](https://github.com/auth0/auth0-cli) that will help you create the tenant and the client applications.
 
 In the command line login to Auth0 with the CLI:
 
