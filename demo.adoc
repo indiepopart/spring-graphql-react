@@ -695,10 +695,10 @@ Add the file to `.gitignore`
 - https://guides.neo4j.com/ukcompanies/data/LandOwnershipAmericans.csv[LandOwnershipAmericans.csv]
 - https://guides.neo4j.com/ukcompanies/data/PSCAmericans.csv[PSCAmericans.csv]
 
-. Edit the file compose.yml and add a service for the Neo4j database.
+. Edit the `compose.yaml` file and add a service for the Neo4j database.
 +
 [source,yaml]
-.compose.yml
+.compose.yaml
 ----
 services:
   neo4j:

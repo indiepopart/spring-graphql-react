@@ -37,7 +37,7 @@ Download the following seed files to an empty folder:
 - [LandOwnershipAmericans.csv](https://guides.neo4j.com/ukcompanies/data/LandOwnershipAmericans.csv)
 - [PSCAmericans.csv](https://guides.neo4j.com/ukcompanies/data/PSCAmericans.csv)
 
-Edit the `compose.yml` file and update the seed data csv folder path:
+Edit the `compose.yaml` file and update the seed data csv folder path:
 
 ```yml
 services:
